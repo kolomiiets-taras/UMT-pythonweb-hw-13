@@ -1,0 +1,6 @@
+
+# hw artifacts
+.coverage
+htmlcov/
+docs/_build/
+.pytest_cache/

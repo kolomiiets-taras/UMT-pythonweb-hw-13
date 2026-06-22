@@ -1,3 +1,9 @@
+"""Database access layer for :class:`~src.entity.models.Contact`.
+
+All queries are scoped by ``user_id`` so a user can only reach their own
+contacts.
+"""
+
 from datetime import date, timedelta
 
 from sqlalchemy import func, or_, select
@@ -16,6 +22,7 @@ async def get_contacts(
     last_name: str | None = None,
     email: str | None = None,
 ) -> list[Contact]:
+    """Return the user's contacts, optionally filtered by name/email substrings."""
     stmt = select(Contact).where(Contact.user_id == user_id)
     if first_name:
         stmt = stmt.where(Contact.first_name.ilike(f"%{first_name}%"))
@@ -29,6 +36,7 @@ async def get_contacts(
 
 
 async def get_contact(db: AsyncSession, user_id: int, contact_id: int) -> Contact | None:
+    """Return one contact owned by the user, or ``None``."""
     result = await db.execute(
         select(Contact).where(
             Contact.id == contact_id, Contact.user_id == user_id
@@ -40,6 +48,7 @@ async def get_contact(db: AsyncSession, user_id: int, contact_id: int) -> Contac
 async def create_contact(
     db: AsyncSession, user_id: int, body: ContactCreate
 ) -> Contact:
+    """Create and persist a new contact for the user."""
     contact = Contact(**body.model_dump(), user_id=user_id)
     db.add(contact)
     await db.commit()
@@ -50,6 +59,7 @@ async def create_contact(
 async def update_contact(
     db: AsyncSession, user_id: int, contact_id: int, body: ContactUpdate
 ) -> Contact | None:
+    """Update an existing contact owned by the user, or return ``None``."""
     contact = await get_contact(db, user_id, contact_id)
     if contact is None:
         return None
@@ -63,6 +73,7 @@ async def update_contact(
 async def delete_contact(
     db: AsyncSession, user_id: int, contact_id: int
 ) -> Contact | None:
+    """Delete a contact owned by the user; return it, or ``None`` if not found."""
     contact = await get_contact(db, user_id, contact_id)
     if contact is None:
         return None

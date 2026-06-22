@@ -15,7 +15,15 @@ class Settings(BaseSettings):
     JWT_SECRET: str = "change-me-super-secret-key-min-32-bytes-long-please"
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     EMAIL_TOKEN_EXPIRE_HOURS: int = 24
+    RESET_TOKEN_EXPIRE_HOURS: int = 1
+
+    # Redis (cache)
+    REDIS_HOST: str = "localhost"
+    REDIS_PORT: int = 6379
+    REDIS_PASSWORD: str | None = None
+    USER_CACHE_TTL: int = 900
 
     # Mail (SMTP)
     MAIL_USERNAME: str = "example@meta.ua"

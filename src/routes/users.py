@@ -1,3 +1,5 @@
+"""User routes: current-user info (rate limited) and avatar upload (admin only)."""
+
 import cloudinary
 import cloudinary.uploader
 from fastapi import APIRouter, Depends, File, Request, UploadFile
@@ -8,7 +10,7 @@ from src.database.db import get_db
 from src.entity.models import User
 from src.repository import users as users_repo
 from src.schemas.users import UserResponse
-from src.services.auth import auth_service
+from src.services.auth import auth_service, require_admin
 from src.services.limiter import limiter
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -34,9 +36,10 @@ async def read_me(
 @router.patch("/avatar", response_model=UserResponse)
 async def update_avatar(
     file: UploadFile = File(),
-    current_user: User = Depends(auth_service.get_current_user),
+    current_user: User = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ):
+    """Upload a new default avatar to Cloudinary. **Admins only.**"""
     public_id = f"contacts_api/{current_user.email}"
     result = cloudinary.uploader.upload(file.file, public_id=public_id, overwrite=True)
     src_url = cloudinary.CloudinaryImage(public_id).build_url(

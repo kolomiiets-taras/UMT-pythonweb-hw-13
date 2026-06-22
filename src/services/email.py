@@ -1,3 +1,5 @@
+"""Outgoing email helpers (verification & password reset) via fastapi-mail."""
+
 from pathlib import Path
 
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
@@ -28,14 +30,26 @@ async def send_verification_email(email: str, username: str, base_url: str) -> N
         message = MessageSchema(
             subject="Confirm your email",
             recipients=[email],
-            template_body={
-                "host": base_url,
-                "username": username,
-                "token": token,
-            },
+            template_body={"host": base_url, "username": username, "token": token},
             subtype=MessageType.html,
         )
         fm = FastMail(conf)
         await fm.send_message(message, template_name="verify_email.html")
+    except ConnectionErrors as err:
+        print(f"Email send failed: {err}")
+
+
+async def send_reset_password_email(email: str, username: str, base_url: str) -> None:
+    """Send a password-reset message with a tokenized reset link."""
+    try:
+        token = auth_service.create_reset_token({"sub": email})
+        message = MessageSchema(
+            subject="Reset your password",
+            recipients=[email],
+            template_body={"host": base_url, "username": username, "token": token},
+            subtype=MessageType.html,
+        )
+        fm = FastMail(conf)
+        await fm.send_message(message, template_name="reset_password.html")
     except ConnectionErrors as err:
         print(f"Email send failed: {err}")

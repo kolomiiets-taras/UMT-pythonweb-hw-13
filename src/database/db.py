@@ -1,3 +1,5 @@
+"""Async database engine, session manager and the ``get_db`` dependency."""
+
 import contextlib
 
 from sqlalchemy.ext.asyncio import (
