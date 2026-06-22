@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: contacts_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: contacts
+    ports:
+      - "5432:5432"
+    volumes:
+      - contacts_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    container_name: contacts_api
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # Override host so the container reaches Postgres by service name.
+      DB_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/contacts
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  contacts_pg_data:
